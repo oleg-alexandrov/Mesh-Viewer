@@ -209,15 +209,17 @@ void ModelManager::getBoundingBoxRecursive(const struct aiNode* nd) {
 //     aiMatrix4x4 x = nd->mTransformation;
 //     std::cout << "--xvals " << x.a1 << ' ' << x.a2 << ' ' << x.a3 << ' ' << x.a4 << std::endl;
 
-    //对当前节点，遍历该节点的所有mMeshes(contains index to a mesh in scene.mMeshes[])
-    for (int n = 0; n < (int)nd->mNumMeshes; ++n) {
-        const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+  //std::cout << "--num meshes " << nd->mNumMeshes << std::endl;
+  for (int n = 0; n < (int)nd->mNumMeshes; ++n) {
+    const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
         
         for (int t = 0; t < (int)mesh->mNumVertices; ++t) {
           Vector3D tmp = mesh->mVertices[t];
           //tmp = matVecProd(*trafo, tmp);
           
           //std::cout << "---got " << tmp.x << ' ' << tmp.y << ' ' << tmp.z << std::endl;
+
+          //std::cout << "--vertex " << tmp.x << ' ' << tmp.y << ' ' << tmp.z << std::endl;
           
           scene_min.x = std::min(scene_min.x, tmp.x);
           scene_min.y = std::min(scene_min.y, tmp.y);
@@ -246,12 +248,14 @@ void ModelManager::recursiveRender(const struct aiScene *sc, const struct aiNode
 //     glPushMatrix();
 //     glMultMatrixf((float*)&mTrans);
 
-    //对当前节点，遍历该节点的所有mMeshes(contains index to a mesh in scene.mMeshes[])
+  //对当前节点，遍历该节点的所有mMeshes(contains index to a mesh in scene.mMeshes[])
+
+  //std::cout << "--recursive render " << std::endl;
     for (int m = 0; m < (int)nd->mNumMeshes; m++) {
         const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[m]];
 
         //添加texture
-        applyMaterial(sc->mMaterials[mesh->mMaterialIndex]);
+        //applyMaterial(sc->mMaterials[mesh->mMaterialIndex]);
 
         if (mesh->mNormals == NULL)
             glDisable(GL_LIGHTING);
@@ -280,11 +284,11 @@ void ModelManager::recursiveRender(const struct aiScene *sc, const struct aiNode
             }
 
 
-            glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-            glEnable(GL_COLOR_MATERIAL);
+            //glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+            //glEnable(GL_COLOR_MATERIAL);
 
             processFace(mesh, face_mode, face);
-            glDisable(GL_COLOR_MATERIAL);
+            //glDisable(GL_COLOR_MATERIAL);
 //             std::cout << "--stop here!" << std::endl;
 //             break;
         }
@@ -316,10 +320,10 @@ void ModelManager::processFace(const struct aiMesh* mesh, GLenum face_mode, cons
 
             vPos[i] = mesh->mVertices[index];
             if (mesh->mNormals != NULL) {
-                if (mesh->HasTextureCoords(0)) {    //有纹理坐标时
-                    vTexPos[i] = mesh->mTextureCoords[0][index];
-                }
-                vNor[i] = mesh->mNormals[index];         //各个点自身的法向量
+              //if (mesh->HasTextureCoords(0)) {    //有纹理坐标时
+              //      vTexPos[i] = mesh->mTextureCoords[0][index];
+              //  }
+              vNor[i] = mesh->mNormals[index];
             }
         }
         subdivision(vPos[0], vPos[1], vPos[2],
@@ -515,10 +519,10 @@ void ModelManager::renderPolygonFaceFlat(const struct aiMesh* mesh, GLenum face_
             firstIndex = index;
 
         if (mesh->mNormals != NULL) {
-            if (mesh->HasTextureCoords(0)) {    //有纹理坐标时
-                glTexCoord2f(mesh->mTextureCoords[0][index].x,
-                    1 - mesh->mTextureCoords[0][index].y); //mTextureCoords[channel][vertex]
-            }
+          //if (mesh->HasTextureCoords(0)) {    //有纹理坐标时
+          //  glTexCoord2f(mesh->mTextureCoords[0][index].x,
+          //               1 - mesh->mTextureCoords[0][index].y); //mTextureCoords[channel][vertex]
+          //}
 
             //设置shading
             if (shadingMode == FlatS)
@@ -569,8 +573,10 @@ void set_float4(float f[4], float a, float b, float c, float d) {
     f[3] = d;
 }
 
-void ModelManager::applyMaterial(const aiMaterial *mtl) {
-    float c[4];
+void ModelManager::applyMaterial(const aiMaterial * mtl) {
+  //  std::cout << "--apply material!" << std::endl;
+#if 0
+  float c[4];
 
     int ret1, ret2;
     aiColor4D diffuse;
@@ -639,5 +645,7 @@ void ModelManager::applyMaterial(const aiMaterial *mtl) {
     if ((AI_SUCCESS == aiGetMaterialIntegerArray(mtl, AI_MATKEY_TWOSIDED, &two_sided, &max)) && two_sided)
         glDisable(GL_CULL_FACE);
     else
-        glEnable(GL_CULL_FACE);
+      glEnable(GL_CULL_FACE);
+#endif
+    
 }

@@ -1,5 +1,5 @@
 #include "openglwindow.h"
-#include <gl/freeglut.h>
+#include <GL/freeglut.h>
 
 #define SCALE_FACTOR 0.1f
 #define ROTATE_FACTOR 2.0f
@@ -135,7 +135,7 @@ void OpenglWindow::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 
-void OpenglWindow::mouseReleaseEvent(QMouseEvent *event) {
+void OpenglWindow::mouseReleaseEvent(QMouseEvent * /*event*/) {
     if (modelManager->transformMode == Rotation) {
         rotateAngleHoriFi += rotateAngleHori;
         rotateAngleHori = 0;

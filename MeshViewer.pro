@@ -34,34 +34,9 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui
 
-unix:!macx|win32: LIBS += -L$$PWD/../../Assimp/assimp_vs2015/assimp_vs2015/lib/ -lassimp
+unix:!macx|win32: LIBS += -L/home/oalexan1/projects/assimp/build/bin -lassimp -lglut -lGL -lGLU
 
-INCLUDEPATH += $$PWD/../../Assimp/assimp_vs2015/assimp_vs2015/include
-DEPENDPATH += $$PWD/../../Assimp/assimp_vs2015/assimp_vs2015/include
+INCLUDEPATH += /home/oalexan1/projects/assimp/include
+INCLUDEPATH += /home/oalexan1/projects/assimp/build/include
+DEPENDPATH += /home/oalexan1/projects/assimp/include
 
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../Assimp/assimp_vs2015/assimp_vs2015/lib/assimp.lib
-else:unix:!macx|win32-g++: PRE_TARGETDEPS += $$PWD/../../Assimp/assimp_vs2015/assimp_vs2015/lib/libassimp.a
-
-unix:!macx|win32: LIBS += -L$$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/lib/ -lDevIL
-
-INCLUDEPATH += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/include
-DEPENDPATH += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/include
-
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/lib/DevIL.lib
-else:unix:!macx|win32-g++: PRE_TARGETDEPS += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/lib/libDevIL.a
-
-unix:!macx|win32: LIBS += -L$$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/lib/ -lILU
-
-INCLUDEPATH += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/include
-DEPENDPATH += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/include
-
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/lib/ILU.lib
-else:unix:!macx|win32-g++: PRE_TARGETDEPS += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/lib/libILU.a
-
-unix:!macx|win32: LIBS += -L$$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/lib/ -lILUT
-
-INCLUDEPATH += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/include
-DEPENDPATH += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/include
-
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/lib/ILUT.lib
-else:unix:!macx|win32-g++: PRE_TARGETDEPS += $$PWD/../../Assimp/assimp-3.3.1/samples/DevIL/lib/libILUT.a

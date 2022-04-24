@@ -1,4 +1,6 @@
-Resources/Duck/duck_triangulate.dae
+Resources/OBJ/box.obj
+#Resources/OBJ/spider.obj
+#Resources/Duck/duck_triangulate.dae
 #Resources/X/dwarf.x
 #Resources/nanosuit/nanosuit.obj
 

@@ -1,14 +1,24 @@
 #include "modelmanager.h"
 
-#define MIN(x,y) ((x)<(y)?(x):(y))
-#define MAX(x,y) ((x)<(y)?(y):(x))
+//#include <IL/il.h>
+//using namespace std;
 
 const GLfloat black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 const GLfloat white[] = { 1.0f, 1.0f, 1.0f, 0.0f };
 const GLfloat red[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 const GLfloat green[] = { 0.0f, 1.0f, 1.0f, 1.0f };
 
-void normalizeVector(aiVector3D& v) {
+// Vector3D matVecProd(aiMatrix4x4 const& m, Vector3D const& v) {
+
+//   Vector3D w;
+//   w.x = m.a1 * v.x + m.a2 * v.y + m.a3 * v.z + m.a4;
+//   w.y = m.b1 * v.x + m.b2 * v.y + m.b3 * v.z + m.b4;
+//   w.z = m.c1 * v.x + m.c2 * v.y + m.c3 * v.z + m.c4;
+  
+//   return w;
+// }
+
+void normalizeVector(Vector3D& v) {
     GLfloat d = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
     v.x /= d;
     v.y /= d;
@@ -19,7 +29,7 @@ ModelManager::ModelManager() {
     textureState = TextureOff;
     displayMode = Flat;
     displayColor = None;
-    shadingMode = Gouraud;
+    shadingMode = FlatS; // Gouraud;
     transformMode = Rotation;
     subdivisionDepth = 0;
 
@@ -28,37 +38,37 @@ ModelManager::ModelManager() {
 ModelManager::~ModelManager() {
     textureIdMap.clear();
 
-    if (textureIds != NULL) {
-        delete[] textureIds;
-        textureIds = NULL;
-    }
+//     if (textureIds != NULL) {
+//         delete[] textureIds;
+//         textureIds = NULL;
+//     }
 
-    aiReleaseImport(scene);    //清除new的空间，防止内存泄露
+    aiReleaseImport(scene); 
 }
 
-string getBasePath(const string& path) {
+std::string getBasePath(const std::string& path) {
     size_t pos = path.find_last_of("\\/");
-    return (string::npos == pos) ? "" : path.substr(0, pos + 1);
+    return (std::string::npos == pos) ? "" : path.substr(0, pos + 1);
 }
 
-bool ModelManager::importModel(const string& pFile) {
-    ifstream modelFilePath(pFile.c_str());
+bool ModelManager::importModel(const std::string& pFile) {
+    std::ifstream modelFilePath(pFile.c_str());
     if (modelFilePath.fail()) {
-        cout << "Error::could not read model path file." << endl;
+        std::cout << "Error::could not read model path file." << std::endl;
         return false;
     }
 
     int modelCount = 3;
     while (getline(modelFilePath, modelPath)) {
         if (modelPath.empty()) {
-            cout << "Error::model path empty." << endl;
+            std::cout << "Error::model path empty." << std::endl;
             return false;
         }
         else if (modelPath[0] == '#') {
-            cout << "Next Line" << endl;
+            std::cout << "Next Line" << std::endl;
         }
         else {
-            cout << "modelPath " << modelPath << endl;
+            std::cout << "modelPath " << modelPath << std::endl;
             break;
         }
 
@@ -73,9 +83,8 @@ bool ModelManager::importModel(const string& pFile) {
     if (!scene)
         return false;
     else {
-        cout << "Import successfully!" << endl;
         getBoundingBox();
-        scene_center.x = (scene_min.x + scene_max.x) / 2.0f;    //设置模型的中心
+        scene_center.x = (scene_min.x + scene_max.x) / 2.0f;
         scene_center.y = (scene_min.y + scene_max.y) / 2.0f;
         scene_center.z = (scene_min.z + scene_max.z) / 2.0f;
 
@@ -84,20 +93,21 @@ bool ModelManager::importModel(const string& pFile) {
 }
 
 bool ModelManager::loadTextures() {
+#if 0
     ILboolean success;
 
     // Before calling ilInit() version should be checked.
     if (ilGetInteger(IL_VERSION_NUM) < IL_VERSION) {
         /// wrong DevIL version ///
-        string err_msg = "Wrong DevIL version. Old devil.dll in system32/SysWow64?";
-        cout << err_msg << endl;
+        std::string err_msg = "Wrong DevIL version. Old devil.dll in system32/SysWow64?";
+        std::cout << err_msg << std::endl;
         return false;
     }
 
     ilInit(); // Initialization of DevIL
 
     //对于每一种材质 Material：
-    for (unsigned int m = 0; m < scene->mNumMaterials; m++) {
+    for (int m = 0; m < (int)scene->mNumMaterials; m++) {
         int texIndex = 0;
         aiReturn texFound = AI_SUCCESS;
 
@@ -128,22 +138,22 @@ bool ModelManager::loadTextures() {
     glGenTextures(numTextures, textureIds);    //根据纹理参数返回n个纹理名称（不一定是连续的整数集合）
 
     // get iterator
-    map<string, GLuint*>::iterator itr = textureIdMap.begin();
+    std::map<std::string, GLuint*>::iterator itr = textureIdMap.begin();
 
-    string basepath = getBasePath(modelPath);
+    std::string basepath = getBasePath(modelPath);
 
     //对于每个texture
     for (int i = 0; i < numTextures; i++) {
         //save IL image ID
-        string filename = (*itr).first;  // get filename
-        cout << "filename " << filename << endl;
+        std::string filename = (*itr).first;  // get filename
+        std::cout << "filename " << filename << std::endl;
         (*itr).second = &textureIds[i];	  //把每个纹理Id放进map的value
         itr++;								  // next texture
 
         ilBindImage(imageIds[i]);    //每个图像id绑定一张图
-        string fileloc = basepath + filename;
-        cout << "fileloc: " << fileloc << endl;
-        success = ilLoadImage(fileloc.c_str());    //加载图片
+        std::string fileloc = basepath + filename;
+        std::cout << "fileloc: " << fileloc << std::endl;
+        success = ilLoadImage(fileloc.c_str()); 
 
         if (success) { // If no error occurred:
 
@@ -178,62 +188,66 @@ bool ModelManager::loadTextures() {
     // Cleanup
     delete[] imageIds;
     imageIds = NULL;
-
+#endif
+    
     return true;
 }
 
 void ModelManager::getBoundingBox() {
-    aiMatrix4x4 trafo;
-    aiIdentityMatrix4(&trafo);
+//     aiMatrix4x4 trafo;
+//     aiIdentityMatrix4(&trafo);
 
     scene_min.x = scene_min.y = scene_min.z =  1e10f;    //初始化为最大
     scene_max.x = scene_max.y = scene_max.z = -1e10f;    //初始化为最小
-    getBoundingBoxRecursive(scene->mRootNode, &trafo);
+    getBoundingBoxRecursive(scene->mRootNode);
 }
-void ModelManager::getBoundingBoxRecursive(const struct aiNode* nd, aiMatrix4x4* trafo) {
-    aiMatrix4x4 prev;
-    prev = *trafo;
-    aiMultiplyMatrix4(trafo, &nd->mTransformation);
+void ModelManager::getBoundingBoxRecursive(const struct aiNode* nd) {
+//     aiMatrix4x4 prev;
+//     prev = *trafo;
+//     aiMultiplyMatrix4(trafo, &nd->mTransformation);
 
-    int n, t;
+//     aiMatrix4x4 x = nd->mTransformation;
+//     std::cout << "--xvals " << x.a1 << ' ' << x.a2 << ' ' << x.a3 << ' ' << x.a4 << std::endl;
+
     //对当前节点，遍历该节点的所有mMeshes(contains index to a mesh in scene.mMeshes[])
-    for (n = 0; n < nd->mNumMeshes; ++n) {
+    for (int n = 0; n < (int)nd->mNumMeshes; ++n) {
         const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
-
-        //对当前的mesh，遍历所有顶点：找到所有顶点里x/y/z的最大/最小值
-        for (t = 0; t < mesh->mNumVertices; ++t) {
-            aiVector3D tmp = mesh->mVertices[t];
-            aiTransformVecByMatrix4(&tmp, trafo);    //转化为同一个坐标系下
-
-            scene_min.x = MIN(scene_min.x, tmp.x);
-            scene_min.y = MIN(scene_min.y, tmp.y);
-            scene_min.z = MIN(scene_min.z, tmp.z);
-
-            scene_max.x = MAX(scene_max.x, tmp.x);
-            scene_max.y = MAX(scene_max.y, tmp.y);
-            scene_max.z = MAX(scene_max.z, tmp.z);
+        
+        for (int t = 0; t < (int)mesh->mNumVertices; ++t) {
+          Vector3D tmp = mesh->mVertices[t];
+          //tmp = matVecProd(*trafo, tmp);
+          
+          //std::cout << "---got " << tmp.x << ' ' << tmp.y << ' ' << tmp.z << std::endl;
+          
+          scene_min.x = std::min(scene_min.x, tmp.x);
+          scene_min.y = std::min(scene_min.y, tmp.y);
+          scene_min.z = std::min(scene_min.z, tmp.z);
+          
+          scene_max.x = std::max(scene_max.x, tmp.x);
+          scene_max.y = std::max(scene_max.y, tmp.y);
+          scene_max.z = std::max(scene_max.z, tmp.z);
         }
     }
 
-    for (n = 0; n < nd->mNumChildren; ++n) {
-        getBoundingBoxRecursive(nd->mChildren[n], trafo);
+    for (int n = 0; n < (int)nd->mNumChildren; ++n) {
+        getBoundingBoxRecursive(nd->mChildren[n]);
     }
-    *trafo = prev;
+    //*trafo = prev;
 }
 
 void ModelManager::renderTheModel() {
     recursiveRender(scene, scene->mRootNode);
 }
 void ModelManager::recursiveRender(const struct aiScene *sc, const struct aiNode* nd) {
-    aiMatrix4x4 mTrans = nd->mTransformation;
+//     aiMatrix4x4 mTrans = nd->mTransformation;
 
-    //更新每个节点的变换方式
-    mTrans.Transpose();
-    glPushMatrix();
-    glMultMatrixf((float*)&mTrans);
+//     //更新每个节点的变换方式
+//     mTrans.Transpose();
+//     glPushMatrix();
+//     glMultMatrixf((float*)&mTrans);
 
     //对当前节点，遍历该节点的所有mMeshes(contains index to a mesh in scene.mMeshes[])
-    for (int m = 0; m < nd->mNumMeshes; m++) {
+    for (int m = 0; m < (int)nd->mNumMeshes; m++) {
         const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[m]];
 
         //添加texture
@@ -245,7 +259,7 @@ void ModelManager::recursiveRender(const struct aiScene *sc, const struct aiNode
             glEnable(GL_LIGHTING);
 
         //对当前的mesh，遍历所有面face
-        for (int f = 0; f < mesh->mNumFaces; f++) {
+        for (int f = 0; f < (int)mesh->mNumFaces; f++) {
             const struct aiFace* face = &(mesh->mFaces[f]);
 
             GLenum face_mode;
@@ -270,17 +284,18 @@ void ModelManager::recursiveRender(const struct aiScene *sc, const struct aiNode
             glEnable(GL_COLOR_MATERIAL);
 
             processFace(mesh, face_mode, face);
-
             glDisable(GL_COLOR_MATERIAL);
+//             std::cout << "--stop here!" << std::endl;
+//             break;
         }
     }
 
     //递归绘制其他子节点
-    for (int n = 0; n < nd->mNumChildren; ++n) {
+    for (int n = 0; n < (int)nd->mNumChildren; ++n) {
         recursiveRender(sc, nd->mChildren[n]);
     }
 
-    glPopMatrix();
+//     glPopMatrix();
 }
 
 void ModelManager::processFace(const struct aiMesh* mesh, GLenum face_mode, const struct aiFace* face) {
@@ -292,11 +307,11 @@ void ModelManager::processFace(const struct aiMesh* mesh, GLenum face_mode, cons
             renderPolygonFaceWireframe(mesh, face);
     }
     else if (face_mode == GL_TRIANGLES) {    //三角形
-        aiVector3D vPos[3];
-        aiVector3D vNor[3];
-        aiVector3D vTexPos[3];
+        Vector3D vPos[3];
+        Vector3D vNor[3];
+        Vector3D vTexPos[3];
 
-        for (int i = 0; i < face->mNumIndices; i++) {
+        for (int i = 0; i < (int)face->mNumIndices; i++) {
             int index = face->mIndices[i];    //顶点索引index
 
             vPos[i] = mesh->mVertices[index];
@@ -314,9 +329,9 @@ void ModelManager::processFace(const struct aiMesh* mesh, GLenum face_mode, cons
     }
 }
 
-void ModelManager::subdivision(aiVector3D vPos1, aiVector3D vPos2, aiVector3D vPos3,
-                               aiVector3D vNor1, aiVector3D vNor2, aiVector3D vNor3,
-                               aiVector3D vTexPos1, aiVector3D vTexPos2, aiVector3D vTexPos3,
+void ModelManager::subdivision(Vector3D vPos1, Vector3D vPos2, Vector3D vPos3,
+                               Vector3D vNor1, Vector3D vNor2, Vector3D vNor3,
+                               Vector3D vTexPos1, Vector3D vTexPos2, Vector3D vTexPos3,
                                int depth) {
     if (depth == 0) {
         if (displayMode == Flat || displayMode == Flatlines) {
@@ -335,9 +350,9 @@ void ModelManager::subdivision(aiVector3D vPos1, aiVector3D vPos2, aiVector3D vP
         return;
     }
 
-    aiVector3D vPosMi[3];
-    aiVector3D vNorMi[3];
-    aiVector3D vTexPosMi[3];
+    Vector3D vPosMi[3];
+    Vector3D vNorMi[3];
+    Vector3D vTexPosMi[3];
 
     //取中间点
     vPosMi[0] = (vPos1 + vPos2) / 2.f;
@@ -368,12 +383,12 @@ void ModelManager::subdivision(aiVector3D vPos1, aiVector3D vPos2, aiVector3D vP
                 vTexPosMi[0], vTexPosMi[1], vTexPosMi[2], depth - 1);
 }
 
-void ModelManager::renderFaceFlatPhong(aiVector3D vPos1, aiVector3D vPos2, aiVector3D vPos3,
-                                aiVector3D vNor1, aiVector3D vNor2, aiVector3D vNor3,
-                                aiVector3D vTexPos1, aiVector3D vTexPos2, aiVector3D vTexPos3) {
-    aiVector3D vPosMi[3];
-    aiVector3D vNorMi[3];
-    aiVector3D vTexPosMi[3];
+void ModelManager::renderFaceFlatPhong(Vector3D vPos1, Vector3D vPos2, Vector3D vPos3,
+                                Vector3D vNor1, Vector3D vNor2, Vector3D vNor3,
+                                Vector3D vTexPos1, Vector3D vTexPos2, Vector3D vTexPos3) {
+    Vector3D vPosMi[3];
+    Vector3D vNorMi[3];
+    Vector3D vTexPosMi[3];
 
     //取中间点
     vPosMi[0] = (vPos1 + vPos2) / 2.f;
@@ -409,27 +424,27 @@ void ModelManager::renderFaceFlatPhong(aiVector3D vPos1, aiVector3D vPos2, aiVec
                             vTexPosMi[0], vTexPosMi[1], vTexPosMi[2]);
 }
 
-void ModelManager::renderSubFaceFlatPhong(aiVector3D vPos1, aiVector3D vPos2, aiVector3D vPos3,
-                            aiVector3D vNor1, aiVector3D vNor2, aiVector3D vNor3,
-                            aiVector3D vTexPos1, aiVector3D vTexPos2, aiVector3D vTexPos3) {
+void ModelManager::renderSubFaceFlatPhong(Vector3D vPos1, Vector3D vPos2, Vector3D vPos3,
+                            Vector3D vNor1, Vector3D vNor2, Vector3D vNor3,
+                            Vector3D vTexPos1, Vector3D vTexPos2, Vector3D vTexPos3) {
     glBegin(GL_TRIANGLES);
-        glTexCoord2f(vTexPos1.x, 1 - vTexPos1.y);
-        glNormal3f(vNor1.x, vNor1.y, vNor1.z);         //各个点自身的法向量
-        glVertex3f(vPos1.x, vPos1.y, vPos1.z);
-
-        glTexCoord2f(vTexPos2.x, 1 - vTexPos2.y);
-        glNormal3f(vNor2.x, vNor2.y, vNor2.z);         //各个点自身的法向量
-        glVertex3f(vPos2.x, vPos2.y, vPos2.z);
-
-        glTexCoord2f(vTexPos3.x, 1 - vTexPos3.y);
-        glNormal3f(vNor3.x, vNor3.y, vNor3.z);         //各个点自身的法向量
-        glVertex3f(vPos3.x, vPos3.y, vPos3.z);
+    glTexCoord2f(vTexPos1.x, 1 - vTexPos1.y); // this is for texture
+    glNormal3f(vNor1.x, vNor1.y, vNor1.z);  
+    glVertex3f(vPos1.x, vPos1.y, vPos1.z);
+    
+    glTexCoord2f(vTexPos2.x, 1 - vTexPos2.y); // this is for texture
+    glNormal3f(vNor2.x, vNor2.y, vNor2.z);   
+    glVertex3f(vPos2.x, vPos2.y, vPos2.z);
+    
+    glTexCoord2f(vTexPos3.x, 1 - vTexPos3.y); // this is for texture
+    glNormal3f(vNor3.x, vNor3.y, vNor3.z);   
+    glVertex3f(vPos3.x, vPos3.y, vPos3.z);
     glEnd();
 }
 
-void ModelManager::renderTriangleFaceFlat(aiVector3D vPos1, aiVector3D vPos2, aiVector3D vPos3,
-                            aiVector3D vNor1, aiVector3D vNor2, aiVector3D vNor3,
-                            aiVector3D vTexPos1, aiVector3D vTexPos2, aiVector3D vTexPos3) {
+void ModelManager::renderTriangleFaceFlat(Vector3D vPos1, Vector3D vPos2, Vector3D vPos3,
+                            Vector3D vNor1, Vector3D vNor2, Vector3D vNor3,
+                            Vector3D vTexPos1, Vector3D vTexPos2, Vector3D vTexPos3) {
     switch(displayColor) {
         case None: glColor4fv(white); break;
         case Red: glColor4fv(red); break;
@@ -438,9 +453,10 @@ void ModelManager::renderTriangleFaceFlat(aiVector3D vPos1, aiVector3D vPos2, ai
 
     glBegin(GL_TRIANGLES);
 
-        //设置shading
         if (shadingMode == FlatS) {
-            glNormal3f(vNor1.x, vNor1.y, vNor1.z);    //仅为第一个点的法向量
+           // has just one normal per face
+          
+            glNormal3f(vNor1.x, vNor1.y, vNor1.z);
 
             glTexCoord2f(vTexPos1.x, 1 - vTexPos1.y);
             glVertex3f(vPos1.x, vPos1.y, vPos1.z);
@@ -469,7 +485,7 @@ void ModelManager::renderTriangleFaceFlat(aiVector3D vPos1, aiVector3D vPos2, ai
     glEnd();
 }
 
-void ModelManager::renderTriangleFaceWireframe(aiVector3D vPos1, aiVector3D vPos2, aiVector3D vPos3) {
+void ModelManager::renderTriangleFaceWireframe(Vector3D vPos1, Vector3D vPos2, Vector3D vPos3) {
     glColor4fv(black);
     glLineWidth(1.0f);
 
@@ -492,7 +508,7 @@ void ModelManager::renderTriangleFaceWireframe(aiVector3D vPos1, aiVector3D vPos
 void ModelManager::renderPolygonFaceFlat(const struct aiMesh* mesh, GLenum face_mode, const struct aiFace* face) {
     int firstIndex, i;
     glBegin(face_mode);
-    for (i = 0; i < face->mNumIndices; i++) {
+    for (i = 0; i < (int)face->mNumIndices; i++) {
         int index = face->mIndices[i];    //顶点索引index
 
         if (i == 0)
@@ -524,9 +540,9 @@ void ModelManager::renderPolygonFaceFlat(const struct aiMesh* mesh, GLenum face_
 
 void ModelManager::renderPolygonFaceWireframe(const struct aiMesh* mesh, const struct aiFace* face) {
     //遍历所有顶点，每两个顶点之间连线
-    for (int i = 0; i < face->mNumIndices; i++) {
+    for (int i = 0; i < (int)face->mNumIndices; i++) {
         int indexA = face->mIndices[i];
-        int indexB = face->mIndices[i == face->mNumIndices - 1 ? 0 : i + 1];
+        int indexB = face->mIndices[i == (int)face->mNumIndices - 1 ? 0 : i + 1];
 
         glColor4fv(black);
         glLineWidth(1.0f);
@@ -565,21 +581,21 @@ void ModelManager::applyMaterial(const aiMaterial *mtl) {
     int two_sided;
     unsigned int max;
 
-    int texIndex = 0;
-    aiString texPath;	//contains filename of texture
+//     int texIndex = 0;
+//     aiString texPath;	//contains filename of texture
 
-    if (AI_SUCCESS == mtl->GetTexture(aiTextureType_DIFFUSE, texIndex, &texPath)) {
-        if (textureState == TextureOn) {    //已经加载纹理：绑定
-            //bind texture
-            unsigned int texId = *(textureIdMap[texPath.data]);
-            glBindTexture(GL_TEXTURE_2D, texId);
-        }
-        else {                    //不需要加载纹理：解绑、删除
-            if (!textureIdMap.empty()) {
-                glDeleteTextures(1, textureIdMap[texPath.data]);
-            }
-        }
-    }
+//     if (AI_SUCCESS == mtl->GetTexture(aiTextureType_DIFFUSE, texIndex, &texPath)) {
+//         if (textureState == TextureOn) {    //已经加载纹理：绑定
+//             //bind texture
+//             unsigned int texId = *(textureIdMap[texPath.data]);
+//             glBindTexture(GL_TEXTURE_2D, texId);
+//         }
+//         else {                    //不需要加载纹理：解绑、删除
+//             if (!textureIdMap.empty()) {
+//                 glDeleteTextures(1, textureIdMap[texPath.data]);
+//             }
+//         }
+//     }
 
     set_float4(c, 0.8f, 0.8f, 0.8f, 1.0f);
     if (AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_DIFFUSE, &diffuse))
